@@ -63,8 +63,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Excerpt first 3-4 chunks (~4000 chars) for entity extraction
-    const docExcerpt = chunks.slice(0, 4).join('\n\n').slice(0, 4000);
+    // Excerpt first 3 chunks (~3000 chars) for fast entity extraction
+    const docExcerpt = chunks.slice(0, 3).join('\n\n').slice(0, 3000);
 
     const systemPrompt = `You are a legal entity graph extractor. Analyze the court judgment text and extract key legal entities, grounded details, and their relationships.
 Return ONLY valid JSON matching this schema:
@@ -111,7 +111,7 @@ Rules:
 
     const prompt = `EXCERPT FROM COURT JUDGMENT:\n\n${docExcerpt}`;
 
-    const completion = await generateCompletion(prompt, systemPrompt, 0.1);
+    const completion = await generateCompletion(prompt, systemPrompt, 0.1, 300000);
 
     // Robust JSON extraction & parsing
     let parsedGraph: GraphData = { nodes: [], edges: [] };
