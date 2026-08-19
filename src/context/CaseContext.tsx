@@ -56,6 +56,8 @@ interface CaseContextType {
   toastVisible: boolean;
   toastMessage: string;
   toastSubtext: string;
+  language: 'en' | 'hi' | 'mr' | 'ta';
+  setLanguage: (lang: 'en' | 'hi' | 'mr' | 'ta') => void;
   dismissToast: () => void;
   fetchOllamaHealth: () => Promise<void>;
   handleFileUpload: (file: File) => Promise<void>;
@@ -97,6 +99,8 @@ export const CaseProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [isSearchingPrecedents, setIsSearchingPrecedents] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const [language, setLanguage] = useState<'en' | 'hi' | 'mr' | 'ta'>('en');
+
   const [toastVisible, setToastVisible] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [toastSubtext, setToastSubtext] = useState('');
@@ -107,21 +111,23 @@ export const CaseProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     fetchOllamaHealth();
   }, []);
 
-  const fetchOllamaHealth = useCallback(async () => {
+  const fetchOllamaHealth = async () => {
     try {
       const res = await fetch('/api/health');
-      const data = await res.json();
-      setOllamaStatus(data);
-    } catch (err: any) {
+      if (res.ok) {
+        const data = await res.json();
+        setOllamaStatus(data);
+      }
+    } catch {
       setOllamaStatus({
         online: false,
+        models: [],
         hasLlmModel: false,
         hasEmbedModel: false,
-        models: [],
-        error: 'Failed to contact local health API',
+        error: 'Ollama service offline',
       });
     }
-  }, []);
+  };
 
   const fetchSummary = useCallback(async (docId: string, sessId: string) => {
     setIsSummarizing(true);
@@ -134,6 +140,7 @@ export const CaseProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         body: JSON.stringify({
           sessionId: sessId,
           documentId: docId,
+          language,
         }),
       });
 
@@ -168,7 +175,7 @@ export const CaseProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     } finally {
       setIsSummarizing(false);
     }
-  }, []);
+  }, [language]);
 
   const fetchGraph = useCallback(async () => {
     if (!documentInfo || !sessionId) return;
@@ -182,6 +189,7 @@ export const CaseProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         body: JSON.stringify({
           sessionId,
           documentId: documentInfo.documentId,
+          language,
         }),
       });
 
@@ -197,7 +205,7 @@ export const CaseProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     } finally {
       setIsGeneratingGraph(false);
     }
-  }, [documentInfo, sessionId]);
+  }, [documentInfo, sessionId, language]);
 
   const fetchPublicDocExplanation = useCallback(async () => {
     if (!documentInfo || !sessionId) return;
@@ -211,6 +219,7 @@ export const CaseProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         body: JSON.stringify({
           sessionId,
           documentId: documentInfo.documentId,
+          language,
         }),
       });
 
@@ -226,7 +235,7 @@ export const CaseProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     } finally {
       setIsExplainingPublicDoc(false);
     }
-  }, [documentInfo, sessionId]);
+  }, [documentInfo, sessionId, language]);
 
   const handleFileUpload = async (file: File) => {
     setIsIngesting(true);
@@ -321,6 +330,7 @@ export const CaseProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           question: questionText,
           sessionId,
           documentId: documentInfo.documentId,
+          language,
         }),
       });
 
@@ -371,7 +381,10 @@ export const CaseProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const res = await fetch('/api/public-ask', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ question: questionText }),
+        body: JSON.stringify({
+          question: questionText,
+          language,
+        }),
       });
 
       const data = await res.json();
@@ -413,18 +426,19 @@ export const CaseProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         body: JSON.stringify({
           sessionId,
           documentId: documentInfo.documentId,
+          language,
         }),
       });
 
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.error || 'Failed to find precedents');
+        throw new Error(data.error || 'Failed to find matching precedents');
       }
 
       setPrecedents(data.precedents || []);
     } catch (err: any) {
-      setError(err.message || 'Error conducting precedent search');
+      console.error('[Precedents Search Error]:', err);
     } finally {
       setIsSearchingPrecedents(false);
     }
@@ -447,6 +461,8 @@ export const CaseProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         publicExplanation,
         isExplainingPublicDoc,
         publicExplainError,
+        language,
+        setLanguage,
         ollamaStatus,
         isIngesting,
         isSummarizing,

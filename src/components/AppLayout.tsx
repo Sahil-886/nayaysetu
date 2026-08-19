@@ -18,6 +18,8 @@ export const AppLayout: React.FC<{ children: ReactNode }> = ({ children }) => {
     toastMessage,
     toastSubtext,
     dismissToast,
+    language,
+    setLanguage,
   } = useCaseContext();
 
   return (
@@ -44,6 +46,8 @@ export const AppLayout: React.FC<{ children: ReactNode }> = ({ children }) => {
           summary={summary}
           messages={messages}
           precedents={precedents}
+          language={language}
+          onLanguageChange={setLanguage}
         />
 
         {/* Dynamic Page Content */}

@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { generateEmbedding, generateCompletion } from '@/lib/ollama';
 import { supabase, isSupabaseConfigured, memoryStore } from '@/lib/supabase';
+import { getLanguageInstruction, getNotFoundMessage } from '@/lib/language';
 
 export async function POST(req: NextRequest) {
   try {
-    const { question, sessionId, documentId } = await req.json();
+    const { question, sessionId, documentId, language } = await req.json();
 
     if (!question || typeof question !== 'string' || !question.trim()) {
       return NextResponse.json({ error: 'Question text is required' }, { status: 400 });
@@ -42,9 +43,11 @@ export async function POST(req: NextRequest) {
     // Filter out low similarity results
     const relevantMatches = matches.filter((m) => m.similarity >= 0.15);
 
+    const notFoundText = getNotFoundMessage(language);
+
     if (relevantMatches.length === 0) {
       return NextResponse.json({
-        answer: 'Not found in the provided documents.',
+        answer: notFoundText,
         citations: [],
         found: false,
       });
@@ -64,12 +67,12 @@ STYLE (mandatory):
 - Keep total answer under ~120 words unless the question explicitly asks for a detailed breakdown.
 - When listing items (dates, amounts, parties, steps, provisions), use a concise bullet list instead of a dense paragraph.
 - Use short paragraphs (2-3 sentences max each).
-- Write in clear, professional legal English. No filler phrases.
+- Write in clear, professional legal language. No filler phrases.
 
 GROUNDING RULES (strict):
-1. If the exact answer is not clearly present or supported by the context, reply EXACTLY: "Not found in the provided documents."
+1. If the exact answer is not clearly present or supported by the context, reply EXACTLY: "${notFoundText}"
 2. NEVER invent legal citations, precedents, or factual claims not present in the context.
-3. Include inline source citations using the format [Chunk X] immediately after any fact or legal reasoning taken from that chunk.`;
+3. Include inline source citations using the format [Chunk X] immediately after any fact or legal reasoning taken from that chunk.${getLanguageInstruction(language)}`;
 
     const userPrompt = `Retrieved Context Chunks:\n${contextPrompt}\n\nUser Question: ${question}\n\nGive a concise, direct answer with inline [Chunk X] citations:`;
 
@@ -83,9 +86,9 @@ GROUNDING RULES (strict):
     }));
 
     return NextResponse.json({
-      answer: llmAnswer || 'Not found in the provided documents.',
+      answer: llmAnswer || notFoundText,
       citations,
-      found: !llmAnswer.includes('Not found in the provided documents.'),
+      found: !llmAnswer.includes(notFoundText) && !llmAnswer.includes('Not found in the provided documents'),
     });
   } catch (error: any) {
     console.error('[Ask API Error]:', error);

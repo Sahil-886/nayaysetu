@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { generateCompletion } from '@/lib/ollama';
 import { memoryStore, supabase, isSupabaseConfigured } from '@/lib/supabase';
+import { getLanguageInstruction } from '@/lib/language';
 
 export interface GraphNode {
   id: string;
@@ -23,7 +24,7 @@ export interface GraphData {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { sessionId, documentId } = body;
+    const { sessionId, documentId, language } = body;
 
     if (!sessionId && !documentId) {
       return NextResponse.json(
@@ -106,7 +107,7 @@ Rules:
 2. "id" MUST be unique identifiers: "n1", "n2", "n3", etc.
 3. "detail" MUST be a 1-2 sentence description derived STRICTLY from the provided text excerpt. If information is not explicitly stated in the document, set "detail": "No further detail found in document." Never fabricate statements or facts.
 4. Extract 4 to 8 key nodes max and 3 to 8 direct edges.
-5. Return ONLY raw JSON. Do not include markdown block formatting or conversational text.`;
+5. Return ONLY raw JSON. Do not include markdown block formatting or conversational text.${getLanguageInstruction(language)}`;
 
     const prompt = `EXCERPT FROM COURT JUDGMENT:\n\n${docExcerpt}`;
 

@@ -1,10 +1,11 @@
 'use client';
 
 import React from 'react';
-import { Scale, Server, RefreshCw, FileText, Shield, Wifi, WifiOff } from 'lucide-react';
+import { Scale, Server, RefreshCw, FileText, Shield, Wifi, WifiOff, Globe } from 'lucide-react';
 import { ExportBriefButton } from './ExportBrief';
 import { ChatMessage } from './ChatPanel';
 import { PrecedentItem } from './PrecedentsPanel';
+import { SUPPORTED_LANGUAGES, SupportedLanguage } from '@/lib/language';
 
 interface HeaderProps {
   ollamaStatus: {
@@ -27,6 +28,8 @@ interface HeaderProps {
   precedents?: PrecedentItem[];
   viewMode?: 'research' | 'public';
   onToggleViewMode?: (mode: 'research' | 'public') => void;
+  language?: SupportedLanguage;
+  onLanguageChange?: (lang: SupportedLanguage) => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -39,6 +42,8 @@ export const Header: React.FC<HeaderProps> = ({
   precedents = [],
   viewMode = 'research',
   onToggleViewMode,
+  language = 'en',
+  onLanguageChange,
 }) => {
   return (
     <header
@@ -97,6 +102,23 @@ export const Header: React.FC<HeaderProps> = ({
           <span>📢</span>
           <span>Know Your Rights (Public)</span>
         </button>
+      </div>
+
+      {/* Language Selector */}
+      <div className="flex items-center space-x-2 bg-[#12203C] px-3.5 py-1.5 rounded-xl border border-[#2A3B5C] relative z-10 shadow-md">
+        <Globe className="w-3.5 h-3.5 text-[#C6A15B]" />
+        <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider hidden sm:inline font-mono">Output:</span>
+        <select
+          value={language}
+          onChange={(e) => onLanguageChange?.(e.target.value as SupportedLanguage)}
+          className="bg-transparent text-xs font-bold text-[#E5C788] focus:outline-none cursor-pointer font-serif"
+        >
+          {SUPPORTED_LANGUAGES.map((lang) => (
+            <option key={lang.code} value={lang.code} className="bg-[#0B1528] text-white">
+              {lang.flag} {lang.nativeLabel} ({lang.label})
+            </option>
+          ))}
+        </select>
       </div>
 
       {/* Center: Active Document + Privacy Badge */}

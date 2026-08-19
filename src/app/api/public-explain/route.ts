@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { generateCompletion } from '@/lib/ollama';
 import { supabase, isSupabaseConfigured, memoryStore } from '@/lib/supabase';
+import { getLanguageInstruction } from '@/lib/language';
 
 function parseLlmJson(rawOutput: string): any {
   if (!rawOutput || !rawOutput.trim()) return null;
@@ -26,7 +27,7 @@ function parseLlmJson(rawOutput: string): any {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json().catch(() => ({}));
-    const { sessionId, documentId } = body;
+    const { sessionId, documentId, language } = body;
 
     if (!sessionId && !documentId) {
       return NextResponse.json(
@@ -85,8 +86,8 @@ JSON KEYS:
 RULES:
 - Base ALL explanations STRICTLY on the provided text ONLY.
 - If information is not in the text, return "Not stated in document."
-- Use simple, empathetic, everyday English that a non-lawyer can understand.
-- Return ONLY raw JSON. Do not include markdown code fences or conversational filler.`;
+- Use simple, empathetic, everyday language that a non-lawyer can understand.
+- Return ONLY raw JSON. Do not include markdown code fences or conversational filler.${getLanguageInstruction(language)}`;
 
     const userPrompt = `DOCUMENT TEXT EXCERPT:\n${docExcerpt}\n\nReturn JSON:`;
 

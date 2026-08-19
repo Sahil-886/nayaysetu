@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { generateEmbedding, generateCompletion } from '@/lib/ollama';
 import { publicVectorStore } from '@/lib/publicVectorStore';
+import { getLanguageInstruction } from '@/lib/language';
 
 export const runtime = 'nodejs';
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { question } = body;
+    const { question, language } = body;
 
     if (!question || typeof question !== 'string' || !question.trim()) {
       return NextResponse.json(
@@ -81,7 +82,7 @@ CRITICAL INSTRUCTIONS & SAFETY RULES:
    - Frame steps as general options, NOT definitive legal advice.
 
 STATUTORY CONTEXT:
-${contextText}`;
+${contextText}${getLanguageInstruction(language)}`;
 
     const userPrompt = `Citizen Situation: "${question.trim()}"
 

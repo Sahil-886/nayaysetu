@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { generateCompletion } from '@/lib/ollama';
 import { supabase, isSupabaseConfigured, memoryStore } from '@/lib/supabase';
+import { getLanguageInstruction } from '@/lib/language';
 
 function parseLlmJson(rawOutput: string): any {
   if (!rawOutput || !rawOutput.trim()) return null;
@@ -32,7 +33,7 @@ function parseLlmJson(rawOutput: string): any {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json().catch(() => ({}));
-    const { sessionId, documentId } = body;
+    const { sessionId, documentId, language } = body;
 
     if (!sessionId && !documentId) {
       return NextResponse.json(
@@ -127,7 +128,7 @@ KEYS TO RETURN IN JSON:
 RULES:
 - Extract EVERY field strictly from the provided text ONLY.
 - If a field cannot be found, return "Not stated in document" for that field. Never invent or pad.
-- Return ONLY raw JSON. No markdown backticks, no markdown formatting.`;
+- Return ONLY raw JSON. No markdown backticks, no markdown formatting.${getLanguageInstruction(language)}`;
 
     const userPrompt = `JUDGMENT DOCUMENT TEXT (CONTAINS PAGE 1 HEADER & CASE BODY):\n${contextText}\n\nReturn JSON:`;
 
