@@ -1,5 +1,7 @@
 import type { Metadata } from 'next';
 import './globals.css';
+import { CaseProvider } from '@/context/CaseContext';
+import { AppLayout } from '@/components/AppLayout';
 
 export const metadata: Metadata = {
   title: 'NyaySetu — AI Legal Research Assistant & Precedent Search',
@@ -32,8 +34,10 @@ export default function RootLayout({
         />
         <meta name="theme-color" content="#0B1528" />
       </head>
-      <body className="h-full bg-[#12203C] text-[#20293A] antialiased font-sans flex flex-col">
-        {children}
+      <body className="h-full bg-[#12203C] text-[#20293A] antialiased font-sans flex flex-col overflow-hidden">
+        <CaseProvider>
+          <AppLayout>{children}</AppLayout>
+        </CaseProvider>
       </body>
     </html>
   );

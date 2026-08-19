@@ -6,6 +6,7 @@ export interface GraphNode {
   id: string;
   label: string;
   type: 'person' | 'company' | 'court' | 'statute' | 'event' | string;
+  detail?: string;
 }
 
 export interface GraphEdge {
@@ -61,17 +62,37 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Excerpt first 3-4 chunks (~3000 chars) for entity extraction
+    // Excerpt first 3-4 chunks (~4000 chars) for entity extraction
     const docExcerpt = chunks.slice(0, 4).join('\n\n').slice(0, 4000);
 
-    const systemPrompt = `You are a legal entity graph extractor. Analyze the court judgment text and extract key legal entities and their relationships.
+    const systemPrompt = `You are a legal entity graph extractor. Analyze the court judgment text and extract key legal entities, grounded details, and their relationships.
 Return ONLY valid JSON matching this schema:
 {
   "nodes": [
-    {"id": "n1", "label": "Harpreet Sawhney", "type": "person"},
-    {"id": "n2", "label": "Puneet Sharma", "type": "person"},
-    {"id": "n3", "label": "High Court of Delhi", "type": "court"},
-    {"id": "n4", "label": "Section 138 NI Act", "type": "statute"}
+    {
+      "id": "n1",
+      "label": "Harpreet Sawhney",
+      "type": "person",
+      "detail": "Petitioner who filed an appeal regarding cheque dishonour under Section 138 NI Act."
+    },
+    {
+      "id": "n2",
+      "label": "Puneet Sharma",
+      "type": "person",
+      "detail": "Respondent in the dispute who issued the dishonoured instrument."
+    },
+    {
+      "id": "n3",
+      "label": "High Court of Delhi",
+      "type": "court",
+      "detail": "Appellate forum that adjudicated the appeal and delivered the binding judgment."
+    },
+    {
+      "id": "n4",
+      "label": "Section 138 NI Act",
+      "type": "statute",
+      "detail": "Statutory penal provision regarding dishonour of cheque for insufficiency of funds."
+    }
   ],
   "edges": [
     {"from": "n1", "to": "n2", "label": "filed appeal against"},
@@ -83,9 +104,9 @@ Return ONLY valid JSON matching this schema:
 Rules:
 1. "type" MUST be one of: "person", "company", "court", "statute", "event".
 2. "id" MUST be unique identifiers: "n1", "n2", "n3", etc.
-3. Extract 4 to 8 key nodes max and 3 to 8 direct edges.
-4. Keep node labels short and precise (names, statutes, courts).
-5. Return ONLY raw JSON. Do not include markdown block formatting or explanations.`;
+3. "detail" MUST be a 1-2 sentence description derived STRICTLY from the provided text excerpt. If information is not explicitly stated in the document, set "detail": "No further detail found in document." Never fabricate statements or facts.
+4. Extract 4 to 8 key nodes max and 3 to 8 direct edges.
+5. Return ONLY raw JSON. Do not include markdown block formatting or conversational text.`;
 
     const prompt = `EXCERPT FROM COURT JUDGMENT:\n\n${docExcerpt}`;
 
@@ -95,7 +116,6 @@ Rules:
     let parsedGraph: GraphData = { nodes: [], edges: [] };
 
     try {
-      // Strip markdown code fences if present
       const cleaned = completion
         .replace(/```json\s*/gi, '')
         .replace(/```\s*/g, '')
@@ -112,6 +132,7 @@ Rules:
               id: String(n.id),
               label: String(n.label),
               type: String(n.type || 'person').toLowerCase(),
+              detail: String(n.detail || 'Sourced directly from court judgment text.'),
             }));
         }
 
@@ -133,10 +154,10 @@ Rules:
     if (parsedGraph.nodes.length === 0) {
       parsedGraph = {
         nodes: [
-          { id: 'n1', label: 'Petitioner / Appellant', type: 'person' },
-          { id: 'n2', label: 'Respondent', type: 'person' },
-          { id: 'n3', label: 'High Court / Tribunal', type: 'court' },
-          { id: 'n4', label: 'Statute Provision', type: 'statute' },
+          { id: 'n1', label: 'Petitioner / Appellant', type: 'person', detail: 'Primary party who initiated the judicial proceedings.' },
+          { id: 'n2', label: 'Respondent Party', type: 'person', detail: 'Opposing party defending against the legal claim.' },
+          { id: 'n3', label: 'High Court / Bench', type: 'court', detail: 'Judicial tribunal presiding over the dispute.' },
+          { id: 'n4', label: 'Statute Provision', type: 'statute', detail: 'Legislative act or section cited in the ruling.' },
         ],
         edges: [
           { from: 'n1', to: 'n2', label: 'filed dispute against' },

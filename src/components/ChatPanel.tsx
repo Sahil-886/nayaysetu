@@ -48,6 +48,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
 }) => {
   const [inputQuery, setInputQuery] = useState('');
   const [activeCitation, setActiveCitation] = useState<CitationItem | null>(null);
+  const [showStarterChips, setShowStarterChips] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -76,10 +77,15 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
     }
   };
 
-  const sampleQuestions = [
-    'What is the core holding and ratio decidendi of this case?',
-    'What constitutional provisions or fundamental rights were under review?',
-    'What key legal test or guidelines did the court establish?',
+  const starterQuestions = [
+    'What is the core legal issue in this case?',
+    'What relief is the petitioner seeking?',
+    'Which statutes and sections are relied upon?',
+    'What was the holding and the ratio decidendi?',
+    'What is the procedural history of this case?',
+    'What were the main arguments of each party?',
+    'Were any precedents cited in this judgment?',
+    'What is the timeline of key events?',
   ];
 
   return (
@@ -163,21 +169,25 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
                   </p>
                 </div>
 
-                {/* Sample Questions */}
+                {/* Starter Questions Grid */}
                 <div className="w-full space-y-2 pt-3 border-t border-slate-100 text-left">
-                  <p className="text-[10px] font-bold text-[#86682B] uppercase tracking-wider">
-                    Suggested Questions:
+                  <p className="text-[10px] font-bold text-[#86682B] uppercase tracking-wider flex items-center justify-between">
+                    <span>Suggested Legal Questions:</span>
+                    <span className="text-[9px] text-slate-400 font-normal">Click to submit</span>
                   </p>
-                  {sampleQuestions.map((q, idx) => (
-                    <button
-                      key={idx}
-                      onClick={() => onSendMessage(q)}
-                      className={`w-full text-left p-3 bg-slate-50 hover:bg-[#FAF4E8] border border-slate-100 hover:border-[#C6A15B]/40 rounded-lg text-xs text-[#0B1528] font-medium transition-premium flex items-center justify-between group animate-fade-in-up stagger-${idx + 1}`}
-                    >
-                      <span className="pr-2 leading-snug">{q}</span>
-                      <ArrowRight className="w-3.5 h-3.5 text-slate-300 group-hover:text-[#C6A15B] shrink-0 transition-premium" />
-                    </button>
-                  ))}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {starterQuestions.map((q, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => onSendMessage(q)}
+                        disabled={isAsking}
+                        className={`text-left p-2.5 bg-slate-50 hover:bg-[#FAF4E8] border border-slate-100 hover:border-[#C6A15B]/40 rounded-lg text-xs text-[#0B1528] font-medium transition-premium flex items-center justify-between group disabled:opacity-50`}
+                      >
+                        <span className="pr-1 leading-snug line-clamp-2">{q}</span>
+                        <ArrowRight className="w-3.5 h-3.5 text-slate-300 group-hover:text-[#C6A15B] shrink-0 transition-premium" />
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
             )}
@@ -311,6 +321,42 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
                 </div>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Horizontal Suggested Questions Chips Bar */}
+      {documentLoaded && showStarterChips && (
+        <div className="shrink-0 space-y-1.5 animate-fade-in">
+          <div className="flex items-center justify-between px-1 text-[10px] text-[#C6A15B] font-bold uppercase tracking-wider">
+            <span className="flex items-center space-x-1">
+              <Sparkles className="w-3 h-3 text-[#C6A15B]" />
+              <span>Suggested Starter Questions</span>
+            </span>
+            <button
+              type="button"
+              onClick={() => setShowStarterChips(false)}
+              className="text-slate-400 hover:text-slate-200 text-[9px] font-mono flex items-center space-x-1"
+              title="Dismiss starter question chips"
+            >
+              <span>Dismiss</span>
+              <X className="w-3 h-3" />
+            </button>
+          </div>
+          <div className="flex items-center space-x-2 overflow-x-auto pb-1 scrollbar-none">
+            {starterQuestions.map((q, idx) => (
+              <button
+                key={idx}
+                type="button"
+                onClick={() => {
+                  onSendMessage(q);
+                }}
+                disabled={isAsking}
+                className="shrink-0 px-3 py-1.5 bg-[#0B1528] hover:bg-[#12203C] text-[#E5C788] border border-[#C6A15B]/40 hover:border-[#C6A15B] rounded-full text-[11px] font-medium transition-all shadow-sm flex items-center space-x-1.5 disabled:opacity-50"
+              >
+                <span>{q}</span>
+              </button>
+            ))}
           </div>
         </div>
       )}

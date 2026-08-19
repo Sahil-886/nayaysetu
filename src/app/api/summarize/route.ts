@@ -62,7 +62,7 @@ export async function POST(req: NextRequest) {
         .select('content, chunk_index')
         .eq('document_id', documentId)
         .order('chunk_index', { ascending: false })
-        .limit(3);
+        .limit(2);
 
       if (tailData && tailData.length > 0) {
         tailChunks = tailData.reverse();
@@ -75,9 +75,9 @@ export async function POST(req: NextRequest) {
         .sort((a, b) => a.chunk_index - b.chunk_index);
 
       if (allMemChunks.length > 0) {
-        headChunks = allMemChunks.slice(0, 3);
-        if (allMemChunks.length > 3) {
-          tailChunks = allMemChunks.slice(-3);
+        headChunks = allMemChunks.slice(0, 2);
+        if (allMemChunks.length > 2) {
+          tailChunks = allMemChunks.slice(-2);
         }
       }
     }
@@ -98,7 +98,7 @@ export async function POST(req: NextRequest) {
       storedStatutes = docRecord.legal_metadata.statutes_and_sections;
     }
 
-    // Combine head chunks (1, 2, 3) + non-overlapping tail chunks
+    // Combine head chunks (1, 2) + non-overlapping tail chunks
     const headIndexes = new Set(headChunks.map((c) => c.chunk_index));
     const combinedChunks = [
       ...headChunks,
@@ -131,7 +131,7 @@ RULES:
 
     const userPrompt = `JUDGMENT DOCUMENT TEXT (CONTAINS PAGE 1 HEADER & CASE BODY):\n${contextText}\n\nReturn JSON:`;
 
-    const llmOutput = await generateCompletion(userPrompt, systemPrompt, 0.1);
+    const llmOutput = await generateCompletion(userPrompt, systemPrompt, 0.1, 300000);
 
     if (!llmOutput || !llmOutput.trim()) {
       return NextResponse.json(

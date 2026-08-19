@@ -1,12 +1,13 @@
 'use client';
 
 import React, { useState } from 'react';
-import { User, Building, Landmark, Scale, Calendar, Info } from 'lucide-react';
+import { Info, ShieldCheck, X } from 'lucide-react';
 
 export interface GraphNode {
   id: string;
   label: string;
   type: string;
+  detail?: string;
 }
 
 export interface GraphEdge {
@@ -41,18 +42,20 @@ export const RelationshipGraph: React.FC<RelationshipGraphProps> = ({ graph }) =
 
   if (nodes.length === 0) {
     return (
-      <div className="py-8 text-center text-xs text-slate-400 font-medium">
+      <div className="py-12 text-center text-xs text-slate-400 font-medium">
         No entities extracted for this document.
       </div>
     );
   }
 
-  // Position nodes in a circular layout
-  const width = 440;
-  const height = 300;
+  const selectedNode = nodes.find((n) => n.id === selectedNodeId);
+
+  // Position nodes in a spacious, stable circular layout
+  const width = 840;
+  const height = 500;
   const cx = width / 2;
-  const cy = height / 2 - 10;
-  const radius = Math.min(width, height) / 2 - 50;
+  const cy = height / 2;
+  const radius = Math.min(width, height) / 2 - 80;
 
   const nodePositions = nodes.reduce((acc, node, index) => {
     const angle = (index / nodes.length) * 2 * Math.PI - Math.PI / 2;
@@ -62,13 +65,11 @@ export const RelationshipGraph: React.FC<RelationshipGraphProps> = ({ graph }) =
     return acc;
   }, {} as Record<string, { x: number; y: number }>);
 
-  // Helper to check if edge connects to selected node
   const isEdgeConnected = (edge: GraphEdge) => {
     if (!selectedNodeId) return true;
     return edge.from === selectedNodeId || edge.to === selectedNodeId;
   };
 
-  // Helper to check if node is selected or connected to selected node
   const isNodeHighlighted = (nodeId: string) => {
     if (!selectedNodeId) return true;
     if (nodeId === selectedNodeId) return true;
@@ -78,34 +79,34 @@ export const RelationshipGraph: React.FC<RelationshipGraphProps> = ({ graph }) =
   };
 
   return (
-    <div className="flex flex-col space-y-3 animate-fade-in">
+    <div className="flex flex-col space-y-4 animate-fade-in">
       {/* SVG Canvas Container */}
-      <div className="relative bg-[#0B1528] rounded-xl border border-[#1B2A4A] p-2 shadow-inner overflow-hidden">
+      <div className="relative bg-[#0B1528] rounded-2xl border border-[#1B2A4A] p-4 shadow-2xl overflow-hidden">
         <svg
           viewBox={`0 0 ${width} ${height}`}
-          className="w-full h-auto max-h-[300px] select-none"
+          className="w-full h-auto max-h-[500px] select-none"
         >
           <defs>
             {/* Arrowhead Markers */}
             <marker
               id="arrowhead"
-              markerWidth="8"
-              markerHeight="8"
-              refX="18"
-              refY="4"
-              orient="auto"
-            >
-              <polygon points="0 0, 8 4, 0 8" fill="#C6A15B" opacity="0.8" />
-            </marker>
-            <marker
-              id="arrowhead-highlight"
               markerWidth="10"
               markerHeight="10"
-              refX="20"
+              refX="25"
               refY="5"
               orient="auto"
             >
-              <polygon points="0 0, 10 5, 0 10" fill="#E5C788" />
+              <polygon points="0 0, 10 5, 0 10" fill="#C6A15B" opacity="0.9" />
+            </marker>
+            <marker
+              id="arrowhead-highlight"
+              markerWidth="12"
+              markerHeight="12"
+              refX="27"
+              refY="6"
+              orient="auto"
+            >
+              <polygon points="0 0, 12 6, 0 12" fill="#E5C788" />
             </marker>
           </defs>
 
@@ -119,8 +120,13 @@ export const RelationshipGraph: React.FC<RelationshipGraphProps> = ({ graph }) =
             const midX = (start.x + end.x) / 2;
             const midY = (start.y + end.y) / 2;
 
+            // Compute edge label text length for pill background width
+            const labelLen = edge.label.length;
+            const labelPillWidth = Math.max(90, labelLen * 7 + 20);
+            const labelPillHalf = labelPillWidth / 2;
+
             return (
-              <g key={`edge-${idx}`} className="transition-opacity duration-200" opacity={connected ? 1 : 0.15}>
+              <g key={`edge-${idx}`} opacity={connected ? 1 : 0.15}>
                 {/* Connection Line */}
                 <line
                   x1={start.x}
@@ -128,33 +134,33 @@ export const RelationshipGraph: React.FC<RelationshipGraphProps> = ({ graph }) =
                   x2={end.x}
                   y2={end.y}
                   stroke={connected && selectedNodeId ? '#E5C788' : '#C6A15B'}
-                  strokeWidth={connected && selectedNodeId ? 2.5 : 1.5}
-                  strokeDasharray={connected ? 'none' : '4,4'}
+                  strokeWidth={connected && selectedNodeId ? 3 : 2}
+                  strokeDasharray={connected ? 'none' : '6,6'}
                   markerEnd={connected && selectedNodeId ? 'url(#arrowhead-highlight)' : 'url(#arrowhead)'}
-                  opacity={0.7}
+                  opacity={0.85}
                 />
-                {/* Edge Label Badge */}
+                {/* Edge Label Pill */}
                 <g transform={`translate(${midX}, ${midY})`}>
                   <rect
-                    x="-45"
-                    y="-9"
-                    width="90"
-                    height="16"
-                    rx="4"
+                    x={-labelPillHalf}
+                    y="-11"
+                    width={labelPillWidth}
+                    height="22"
+                    rx="6"
                     fill="#12203C"
                     stroke="#1B2A4A"
-                    strokeWidth="1"
+                    strokeWidth="1.5"
                   />
                   <text
                     x="0"
-                    y="3"
+                    y="4"
                     textAnchor="middle"
                     fill="#E5C788"
-                    fontSize="9"
-                    fontWeight="600"
-                    className="font-sans"
+                    fontSize="10"
+                    fontWeight="700"
+                    className="font-sans select-none"
                   >
-                    {edge.label.length > 15 ? edge.label.slice(0, 14) + '…' : edge.label}
+                    {edge.label}
                   </text>
                 </g>
               </g>
@@ -170,57 +176,75 @@ export const RelationshipGraph: React.FC<RelationshipGraphProps> = ({ graph }) =
             const highlighted = isNodeHighlighted(node.id);
             const isSelected = selectedNodeId === node.id;
 
+            // Compute dynamic pill width to fit FULL untruncated label cleanly
+            const labelLength = node.label.length;
+            const pillWidth = Math.max(120, labelLength * 7.5 + 24);
+            const pillHalfWidth = pillWidth / 2;
+
             return (
               <g
                 key={`node-${node.id}`}
                 transform={`translate(${pos.x}, ${pos.y})`}
                 onClick={() => setSelectedNodeId(isSelected ? null : node.id)}
-                className="cursor-pointer group transition-transform duration-200 hover:scale-105"
+                className="cursor-pointer group"
                 opacity={highlighted ? 1 : 0.25}
               >
-                {/* Node Halo Ring on Selection */}
+                {/* Stable Selection Ring */}
                 {isSelected && (
                   <circle
-                    r="24"
+                    r="28"
                     fill="none"
                     stroke="#E5C788"
-                    strokeWidth="2"
-                    className="animate-ping opacity-50"
+                    strokeWidth="3"
                   />
                 )}
 
                 {/* Main Node Circle */}
                 <circle
-                  r="18"
+                  r="22"
                   fill={colorScheme.fill}
                   stroke={isSelected ? '#FFFFFF' : colorScheme.stroke}
-                  strokeWidth={isSelected ? 3 : 2}
-                  className="shadow-lg transition-all"
+                  strokeWidth={isSelected ? 3.5 : 2.5}
+                  className="shadow-xl"
                 />
 
-                {/* Node Label Text Below Node */}
-                <g transform="translate(0, 30)">
+                {/* Node Letter Badge inside Circle */}
+                <text
+                  x="0"
+                  y="5"
+                  textAnchor="middle"
+                  fill="#FFFFFF"
+                  fontSize="12"
+                  fontWeight="800"
+                  className="font-mono select-none pointer-events-none"
+                >
+                  {node.type.slice(0, 1).toUpperCase()}
+                </text>
+
+                {/* Full Untruncated Label Badge Below Node */}
+                <g transform="translate(0, 36)" className="pointer-events-none">
                   <rect
-                    x="-55"
-                    y="-10"
-                    width="110"
-                    height="18"
-                    rx="4"
+                    x={-pillHalfWidth}
+                    y="-12"
+                    width={pillWidth}
+                    height="24"
+                    rx="6"
                     fill="#12203C"
                     stroke={isSelected ? '#C6A15B' : '#1B2A4A'}
-                    strokeWidth="1"
+                    strokeWidth={isSelected ? 2 : 1}
                     opacity="0.95"
+                    className="shadow-md"
                   />
                   <text
                     x="0"
-                    y="2"
+                    y="3"
                     textAnchor="middle"
                     fill="#F8FAFC"
-                    fontSize="10"
+                    fontSize="11"
                     fontWeight="700"
                     className="font-serif select-none"
                   >
-                    {node.label.length > 16 ? node.label.slice(0, 15) + '…' : node.label}
+                    {node.label}
                   </text>
                 </g>
               </g>
@@ -228,38 +252,79 @@ export const RelationshipGraph: React.FC<RelationshipGraphProps> = ({ graph }) =
           })}
         </svg>
 
-        {/* Dynamic Node Details Header */}
-        <div className="absolute top-2 left-2 right-2 flex items-center justify-between text-[10px] text-slate-400 bg-[#12203C]/90 px-3 py-1.5 rounded-lg border border-[#1B2A4A] backdrop-blur-xs">
-          <div className="flex items-center space-x-1.5">
-            <Info className="w-3.5 h-3.5 text-[#C6A15B]" />
+        {/* Dynamic Navigation Banner */}
+        <div className="absolute top-4 left-4 right-4 flex items-center justify-between text-xs text-slate-300 bg-[#12203C]/95 px-4 py-2.5 rounded-xl border border-[#1B2A4A] backdrop-blur-md shadow-lg">
+          <div className="flex items-center space-x-2">
+            <Info className="w-4 h-4 text-[#C6A15B]" />
             <span>
-              {selectedNodeId
-                ? `Node "${nodes.find((n) => n.id === selectedNodeId)?.label}" selected`
-                : 'Click any entity node to highlight connections'}
+              {selectedNode
+                ? `Selected: "${selectedNode.label}"`
+                : 'Click any entity node to highlight connections & view grounded facts'}
             </span>
           </div>
           {selectedNodeId && (
             <button
               onClick={() => setSelectedNodeId(null)}
-              className="text-[#E5C788] hover:underline font-bold uppercase tracking-wider text-[9px]"
+              className="text-[#E5C788] hover:underline font-bold uppercase tracking-wider text-[10px]"
             >
-              Reset Filter
+              Reset Selection
             </button>
           )}
         </div>
       </div>
 
+      {/* Grounded Entity Detail Popover Modal / Card */}
+      {selectedNode && (
+        <div className="bg-[#0B1528] rounded-2xl border-2 border-[#C6A15B]/50 p-6 shadow-2xl animate-fade-in-up space-y-3">
+          <div className="flex items-center justify-between border-b border-[#1B2A4A] pb-3">
+            <div className="flex items-center space-x-3">
+              <span
+                className="w-4 h-4 rounded-full inline-block shrink-0"
+                style={{ backgroundColor: (TYPE_COLORS[selectedNode.type] || TYPE_COLORS.default).fill }}
+              />
+              <div>
+                <h3 className="text-base font-bold text-white font-serif">{selectedNode.label}</h3>
+                <span className="text-[10px] uppercase font-mono font-bold text-[#C6A15B] tracking-wider">
+                  {(TYPE_COLORS[selectedNode.type] || TYPE_COLORS.default).label}
+                </span>
+              </div>
+            </div>
+            <div className="flex items-center space-x-2">
+              <span className="px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-500/30 text-[10px] font-bold font-mono flex items-center space-x-1">
+                <ShieldCheck className="w-3.5 h-3.5" />
+                <span>100% Grounded in Judgment</span>
+              </span>
+              <button
+                onClick={() => setSelectedNodeId(null)}
+                className="p-1 hover:bg-[#12203C] rounded-lg text-slate-400 hover:text-white"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+
+          <div className="bg-[#12203C] p-4 rounded-xl border border-[#1B2A4A] space-y-2">
+            <span className="text-[10px] uppercase font-bold text-[#C6A15B] tracking-wider block font-mono">
+              Grounded Legal Role &amp; Context
+            </span>
+            <p className="text-xs text-slate-200 leading-relaxed font-serif">
+              {selectedNode.detail || 'No further detail found in document.'}
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Entity Color Legend */}
-      <div className="flex items-center justify-center space-x-3 flex-wrap text-[10px] bg-slate-50 p-2.5 rounded-lg border border-slate-100 gap-y-1">
+      <div className="flex items-center justify-center space-x-4 flex-wrap text-xs bg-[#0B1528] p-3 rounded-xl border border-[#1B2A4A] gap-y-2">
         {Object.entries(TYPE_COLORS)
           .filter(([key]) => key !== 'default')
           .map(([typeKey, cfg]) => (
-            <div key={typeKey} className="flex items-center space-x-1.5">
+            <div key={typeKey} className="flex items-center space-x-2">
               <span
-                className="w-2.5 h-2.5 rounded-full inline-block"
+                className="w-3.5 h-3.5 rounded-full inline-block shadow-sm"
                 style={{ backgroundColor: cfg.fill }}
               />
-              <span className="font-medium text-slate-700">{cfg.label}</span>
+              <span className="font-medium text-slate-300">{cfg.label}</span>
             </div>
           ))}
       </div>

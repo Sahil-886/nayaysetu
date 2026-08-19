@@ -7,7 +7,7 @@
 const OLLAMA_BASE_URL = process.env.OLLAMA_BASE_URL || 'http://127.0.0.1:11434';
 const OLLAMA_LLM_MODEL = process.env.OLLAMA_LLM_MODEL || 'llama3.2';
 const OLLAMA_EMBED_MODEL = process.env.OLLAMA_EMBED_MODEL || 'nomic-embed-text';
-const DEFAULT_TIMEOUT_MS = parseInt(process.env.OLLAMA_TIMEOUT_MS || '120000', 10);
+const DEFAULT_TIMEOUT_MS = parseInt(process.env.OLLAMA_TIMEOUT_MS || '300000', 10);
 
 export interface OllamaHealthStatus {
   online: boolean;
@@ -119,7 +119,8 @@ export async function generateEmbedding(text: string): Promise<number[]> {
 export async function generateCompletion(
   prompt: string,
   systemPrompt?: string,
-  temperature = 0.1
+  temperature = 0.1,
+  timeoutMs = DEFAULT_TIMEOUT_MS
 ): Promise<string> {
   try {
     const response = await fetchWithTimeout(`${OLLAMA_BASE_URL}/api/generate`, {
@@ -135,7 +136,7 @@ export async function generateCompletion(
           top_p: 0.9,
         },
       }),
-    }, 120000);
+    }, timeoutMs);
 
     if (!response.ok) {
       const errText = await response.text();
