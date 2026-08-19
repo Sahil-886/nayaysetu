@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
       const { data, error } = await supabase.rpc('match_uploaded_chunks', {
         query_embedding: queryEmbedding,
         match_threshold: 0.15,
-        match_count: 4,
+        match_count: 3,
         p_session_id: sessionId || '',
       });
 
@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
 
     if (matches.length === 0) {
       // Memory Store vector search
-      matches = memoryStore.matchUploadedChunks(queryEmbedding, sessionId || '', 4);
+      matches = memoryStore.matchUploadedChunks(queryEmbedding, sessionId || '', 3);
     }
 
     // Filter out low similarity results
@@ -73,7 +73,7 @@ GROUNDING RULES (strict):
 
     const userPrompt = `Retrieved Context Chunks:\n${contextPrompt}\n\nUser Question: ${question}\n\nGive a concise, direct answer with inline [Chunk X] citations:`;
 
-    const llmAnswer = await generateCompletion(userPrompt, systemPrompt, 0.1);
+    const llmAnswer = await generateCompletion(userPrompt, systemPrompt, 0.1, 300000);
 
     // Format citations list for UI drawer
     const citations = relevantMatches.map((m) => ({

@@ -87,7 +87,7 @@ ${contextText}`;
 
 Provide the 4-part structured general legal information response based strictly on the statutory context above.`;
 
-    const rawResponse = await generateCompletion(userPrompt, systemPrompt, 0.1);
+    const rawResponse = await generateCompletion(userPrompt, systemPrompt, 0.1, 300000);
 
     // Prepare citations list
     const citations = relevantMatches.map((m, idx) => ({
