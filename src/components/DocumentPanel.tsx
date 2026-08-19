@@ -17,7 +17,9 @@ import {
   RotateCcw,
   Scale,
   FileCheck,
+  Network,
 } from 'lucide-react';
+import { RelationshipGraph, GraphData } from './RelationshipGraph';
 
 export interface SummaryData {
   parties?: string;
@@ -45,10 +47,14 @@ interface DocumentPanelProps {
   summary: SummaryData | null;
   judicialChecklist?: JudicialChecklistData | null;
   summaryError?: string | null;
+  graphData?: GraphData | null;
+  isGeneratingGraph?: boolean;
+  graphError?: string | null;
   isIngesting: boolean;
   isSummarizing: boolean;
   onFileUpload: (file: File) => void;
   onGenerateSummary: () => void;
+  onFetchGraph?: () => void;
   error?: string | null;
 }
 
@@ -57,13 +63,17 @@ export const DocumentPanel: React.FC<DocumentPanelProps> = ({
   summary,
   judicialChecklist,
   summaryError,
+  graphData,
+  isGeneratingGraph,
+  graphError,
   isIngesting,
   isSummarizing,
   onFileUpload,
   onGenerateSummary,
+  onFetchGraph,
   error,
 }) => {
-  const [activeTab, setActiveTab] = useState<'summary' | 'checklist'>('summary');
+  const [activeTab, setActiveTab] = useState<'summary' | 'checklist' | 'graph'>('summary');
   const [timelineOpen, setTimelineOpen] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
 
@@ -247,11 +257,11 @@ export const DocumentPanel: React.FC<DocumentPanelProps> = ({
             )}
           </div>
 
-          {/* View Mode Toggle: Summary vs Judicial Checklist */}
+          {/* View Mode Toggle: Summary vs Judicial Checklist vs Entity Graph */}
           <div className="flex items-center p-1 bg-slate-100 rounded-xl space-x-1 border border-slate-200/60">
             <button
               onClick={() => setActiveTab('summary')}
-              className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-bold font-serif transition-premium flex items-center justify-center space-x-1.5 ${
+              className={`flex-1 py-1.5 px-2 rounded-lg text-[11px] font-bold font-serif transition-premium flex items-center justify-center space-x-1 ${
                 activeTab === 'summary'
                   ? 'bg-[#12203C] text-[#E5C788] shadow-md border border-[#1B2A4A]'
                   : 'text-slate-600 hover:text-[#0B1528] hover:bg-slate-200/50'
@@ -262,14 +272,28 @@ export const DocumentPanel: React.FC<DocumentPanelProps> = ({
             </button>
             <button
               onClick={() => setActiveTab('checklist')}
-              className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-bold font-serif transition-premium flex items-center justify-center space-x-1.5 ${
+              className={`flex-1 py-1.5 px-2 rounded-lg text-[11px] font-bold font-serif transition-premium flex items-center justify-center space-x-1 ${
                 activeTab === 'checklist'
                   ? 'bg-[#12203C] text-[#E5C788] shadow-md border border-[#1B2A4A]'
                   : 'text-slate-600 hover:text-[#0B1528] hover:bg-slate-200/50'
               }`}
             >
               <FileCheck className="w-3.5 h-3.5 text-[#C6A15B]" />
-              <span>Judicial Checklist</span>
+              <span>Checklist</span>
+            </button>
+            <button
+              onClick={() => {
+                setActiveTab('graph');
+                if (!graphData && onFetchGraph) onFetchGraph();
+              }}
+              className={`flex-1 py-1.5 px-2 rounded-lg text-[11px] font-bold font-serif transition-premium flex items-center justify-center space-x-1 ${
+                activeTab === 'graph'
+                  ? 'bg-[#12203C] text-[#E5C788] shadow-md border border-[#1B2A4A]'
+                  : 'text-slate-600 hover:text-[#0B1528] hover:bg-slate-200/50'
+              }`}
+            >
+              <Network className="w-3.5 h-3.5 text-[#C6A15B]" />
+              <span>Entity Graph</span>
             </button>
           </div>
         </div>
@@ -394,6 +418,40 @@ export const DocumentPanel: React.FC<DocumentPanelProps> = ({
                   </div>
                 );
               })
+            )}
+          </div>
+        )}
+
+        {/* TAB 3: Legal Relationship Graph View */}
+        {activeTab === 'graph' && !isSummarizing && (
+          <div className="space-y-3 animate-fade-in">
+            {isGeneratingGraph ? (
+              <div className="py-8 text-center space-y-3 border border-[#C6A15B]/20 rounded-lg bg-[#0B1528]">
+                <Loader2 className="w-7 h-7 text-[#C6A15B] animate-spin mx-auto" />
+                <p className="text-xs text-[#E5C788] font-bold font-serif">
+                  Extracting Legal Entities &amp; Relationships...
+                </p>
+                <p className="text-[11px] text-slate-400">Processing graph topology with llama3.2</p>
+              </div>
+            ) : graphError ? (
+              <div className="p-3.5 bg-rose-50 border-l-[3px] border-rose-500 rounded-lg text-xs space-y-2">
+                <p className="font-bold text-rose-800 font-bold">Graph Extraction Error</p>
+                <p className="text-rose-700">{graphError}</p>
+                {onFetchGraph && (
+                  <button
+                    onClick={onFetchGraph}
+                    className="px-3 py-1 bg-[#C6A15B] text-[#0B1528] font-bold rounded text-[11px]"
+                  >
+                    Retry Extraction
+                  </button>
+                )}
+              </div>
+            ) : graphData ? (
+              <RelationshipGraph graph={graphData} />
+            ) : (
+              <div className="py-6 text-center text-xs text-slate-500 bg-slate-50 rounded-lg border p-4 font-sans">
+                No graph extracted yet. Upload a document or click <span className="font-bold text-[#86682B]">Entity Graph</span> to generate.
+              </div>
             )}
           </div>
         )}

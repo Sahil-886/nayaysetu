@@ -24,6 +24,9 @@ export default function Home() {
   const [summary, setSummary] = useState<any>(null);
   const [judicialChecklist, setJudicialChecklist] = useState<any>(null);
   const [summaryError, setSummaryError] = useState<string | null>(null);
+  const [graphData, setGraphData] = useState<any>(null);
+  const [isGeneratingGraph, setIsGeneratingGraph] = useState(false);
+  const [graphError, setGraphError] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [precedents, setPrecedents] = useState<PrecedentItem[]>([]);
 
@@ -111,6 +114,35 @@ export default function Home() {
     }
   }, []);
 
+  // Fetch Legal Relationship Graph helper
+  const fetchGraph = useCallback(async (docId: string, sessId: string) => {
+    setIsGeneratingGraph(true);
+    setGraphError(null);
+
+    try {
+      const res = await fetch('/api/graph', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sessionId: sessId,
+          documentId: docId,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data || !data.success) {
+        throw new Error(data?.error || 'Failed to extract legal relationship graph.');
+      }
+
+      setGraphData(data.graph);
+    } catch (err: any) {
+      console.error('[Fetch Graph Error]:', err);
+      setGraphError(err.message || 'Failed to extract relationship graph.');
+    } finally {
+      setIsGeneratingGraph(false);
+    }
+  }, []);
+
   // Handle PDF Upload
   const handleFileUpload = async (file: File) => {
     setIsIngesting(true);
@@ -118,6 +150,8 @@ export default function Home() {
     setSummary(null);
     setJudicialChecklist(null);
     setSummaryError(null);
+    setGraphData(null);
+    setGraphError(null);
     setPrecedents([]);
     setMessages([]);
 
@@ -351,10 +385,14 @@ export default function Home() {
               summary={summary}
               judicialChecklist={judicialChecklist}
               summaryError={summaryError}
+              graphData={graphData}
+              isGeneratingGraph={isGeneratingGraph}
+              graphError={graphError}
               isIngesting={isIngesting}
               isSummarizing={isSummarizing}
               onFileUpload={handleFileUpload}
               onGenerateSummary={handleGenerateSummary}
+              onFetchGraph={() => documentInfo && fetchGraph(documentInfo.documentId, sessionId)}
               error={error}
             />
           </div>
