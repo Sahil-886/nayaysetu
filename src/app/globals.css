@@ -1,0 +1,283 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Source+Serif+4:ital,wght@0,400;0,600;0,700;1,400&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #12203C;
+  --foreground: #20293A;
+  --navy-primary: #12203C;
+  --navy-dark: #0B1528;
+  --brass-accent: #C6A15B;
+  --brass-light: #FAF4E8;
+  --legal-green: #2C7A4B;
+  --surface-card: #FFFFFF;
+  --surface-bg: #F7F8FA;
+  --ink-primary: #20293A;
+  --ink-muted: #5B6472;
+}
+
+/* ─── Base ────────────────────────────────────────── */
+body {
+  color: var(--foreground);
+  background: var(--background);
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ─── Animation Keyframes ─────────────────────────── */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes pulseGlow {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(198, 161, 91, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(198, 161, 91, 0);
+  }
+}
+
+@keyframes typingDot {
+  0%, 80%, 100% {
+    opacity: 0.3;
+    transform: scale(0.8);
+  }
+  40% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes progressBar {
+  0% { width: 0%; }
+  50% { width: 66%; }
+  100% { width: 90%; }
+}
+
+/* ─── Animation Utility Classes ──────────────────── */
+.animate-fade-in-up {
+  animation: fadeInUp 0.4s ease-out forwards;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out forwards;
+}
+
+.animate-slide-in-right {
+  animation: slideInRight 0.4s ease-out forwards;
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.3s ease-out forwards;
+}
+
+.animate-pulse-glow {
+  animation: pulseGlow 2s ease-in-out infinite;
+}
+
+.animate-progress {
+  animation: progressBar 8s ease-out forwards;
+}
+
+/* Staggered entrance for lists */
+.stagger-1 { animation-delay: 0.05s; }
+.stagger-2 { animation-delay: 0.1s; }
+.stagger-3 { animation-delay: 0.15s; }
+.stagger-4 { animation-delay: 0.2s; }
+.stagger-5 { animation-delay: 0.25s; }
+
+/* ─── Typing Indicator ──────────────────────────── */
+.typing-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: #C6A15B;
+  display: inline-block;
+  animation: typingDot 1.4s ease-in-out infinite;
+}
+.typing-dot:nth-child(2) { animation-delay: 0.2s; }
+.typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+/* ─── Shimmer Loading Skeleton ───────────────────── */
+.skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    #E2E8F0 25%,
+    #F1F5F9 50%,
+    #E2E8F0 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: 6px;
+}
+
+/* ─── Custom Scrollbars ──────────────────────────── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #2A3B5C;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #C6A15B;
+}
+
+/* White-card scroll context */
+.scroll-light::-webkit-scrollbar-track {
+  background: #F7F8FA;
+}
+
+.scroll-light::-webkit-scrollbar-thumb {
+  background: #CBD5E1;
+  border-radius: 4px;
+}
+
+.scroll-light::-webkit-scrollbar-thumb:hover {
+  background: #94A3B8;
+}
+
+/* ─── Focus Accessibility ────────────────────────── */
+*:focus-visible {
+  outline: 2px solid #C6A15B;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+button:focus-visible,
+input:focus-visible,
+a:focus-visible {
+  outline: 2px solid #C6A15B;
+  outline-offset: 2px;
+}
+
+/* ─── Selection Style ────────────────────────────── */
+::selection {
+  background-color: rgba(198, 161, 91, 0.25);
+  color: #0B1528;
+}
+
+/* ─── Transition Utility ─────────────────────────── */
+.transition-premium {
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ─── Card Hover Effect ──────────────────────────── */
+.card-hover {
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+              box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+              border-color 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 8px 16px -4px rgba(0, 0, 0, 0.08),
+    0 4px 8px -4px rgba(0, 0, 0, 0.04),
+    0 0 0 1px rgba(198, 161, 91, 0.2);
+  border-color: rgba(198, 161, 91, 0.35);
+}
+
+/* ─── Citation Chip Hover ────────────────────────── */
+.cite-chip-hover {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.cite-chip-hover:hover {
+  background: #C6A15B;
+  color: #0B1528;
+  border-color: #C6A15B;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(198, 161, 91, 0.35);
+}
+
+/* ─── Status Pill Transition ─────────────────────── */
+.status-pill-transition {
+  transition: background-color 0.4s ease, border-color 0.4s ease, box-shadow 0.4s ease;
+}
+
+/* ─── Success Toast ──────────────────────────────── */
+@keyframes toastSlideIn {
+  0% {
+    opacity: 0;
+    transform: translateY(-12px) scale(0.96);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes toastSlideOut {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.96);
+  }
+}
+
+.toast-enter {
+  animation: toastSlideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.toast-exit {
+  animation: toastSlideOut 0.25s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* ─── Serif Font Override ────────────────────────── */
+.font-serif {
+  font-family: 'Source Serif 4', Cambria, Georgia, serif !important;
+}
+
