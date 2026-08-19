@@ -78,32 +78,6 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
       </div>
 
-      {/* Mode Switcher Selector Segment */}
-      <div className="flex items-center bg-[#12203C] p-1 rounded-xl border border-[#2A3B5C] relative z-10 shadow-inner">
-        <button
-          onClick={() => onToggleViewMode?.('research')}
-          className={`flex items-center space-x-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition ${
-            viewMode === 'research'
-              ? 'bg-[#C6A15B] text-[#0B1528] shadow-md font-bold'
-              : 'text-slate-400 hover:text-slate-200 hover:bg-[#1B2A4A]'
-          }`}
-        >
-          <span>⚖️</span>
-          <span>Legal Research (Judges & Lawyers)</span>
-        </button>
-        <button
-          onClick={() => onToggleViewMode?.('public')}
-          className={`flex items-center space-x-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition ${
-            viewMode === 'public'
-              ? 'bg-[#C6A15B] text-[#0B1528] shadow-md font-bold'
-              : 'text-slate-400 hover:text-slate-200 hover:bg-[#1B2A4A]'
-          }`}
-        >
-          <span>📢</span>
-          <span>Know Your Rights (Public)</span>
-        </button>
-      </div>
-
       {/* Language Selector */}
       <div className="flex items-center space-x-2 bg-[#12203C] px-3.5 py-1.5 rounded-xl border border-[#2A3B5C] relative z-10 shadow-md">
         <Globe className="w-3.5 h-3.5 text-[#C6A15B]" />
