@@ -99,7 +99,13 @@ export const CaseProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [isSearchingPrecedents, setIsSearchingPrecedents] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const [language, setLanguage] = useState<'en' | 'hi' | 'mr' | 'ta'>('en');
+  const [language, setLanguageState] = useState<'en' | 'hi' | 'mr' | 'ta'>('en');
+
+  const setLanguage = useCallback((lang: 'en' | 'hi' | 'mr' | 'ta') => {
+    setLanguageState(lang);
+    setPublicExplanation(null);
+    setPublicExplainError(null);
+  }, []);
 
   const [toastVisible, setToastVisible] = useState(false);
   const [toastMessage, setToastMessage] = useState('');

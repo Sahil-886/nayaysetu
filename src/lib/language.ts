@@ -21,11 +21,11 @@ export const SUPPORTED_LANGUAGES: LanguageOption[] = [
 export function getLanguageInstruction(lang?: string): string {
   switch (lang) {
     case 'hi':
-      return `\n\nLANGUAGE INSTRUCTION (MANDATORY): Respond strictly in clear, professional HINDI (हिंदी) using Devanagari script. Keep statutory act titles, section numbers, case names, and citation tokens [Chunk X] recognizable and unaltered (e.g. "Section 138 NI Act", "High Court of Delhi").`;
+      return `\n\nIMPORTANT LANGUAGE INSTRUCTION (MANDATORY): Write your entire response in Hindi (हिंदी) using Devanagari script. Do not use English except for legal citations, statute names, section numbers, and case names. Respond ONLY in Hindi.`;
     case 'mr':
-      return `\n\nLANGUAGE INSTRUCTION (MANDATORY): Respond strictly in clear, natural MARATHI (मराठी) using Devanagari script. Keep statutory act titles, section numbers, case names, and citation tokens [Chunk X] recognizable and unaltered.`;
+      return `\n\nIMPORTANT LANGUAGE INSTRUCTION (MANDATORY): Write your entire response in Marathi (मराठी) using Devanagari script. Do not use English except for legal citations, statute names, section numbers, and case names. Respond ONLY in Marathi.`;
     case 'ta':
-      return `\n\nLANGUAGE INSTRUCTION (MANDATORY): Respond strictly in clear, natural TAMIL (தமிழ்) using Tamil script. Keep statutory act titles, section numbers, case names, and citation tokens [Chunk X] recognizable and unaltered.`;
+      return `\n\nIMPORTANT LANGUAGE INSTRUCTION (MANDATORY): Write your entire response in Tamil (தமிழ்) using Tamil script. Do not use English except for legal citations, statute names, section numbers, and case names. Respond ONLY in Tamil.`;
     default:
       return '';
   }

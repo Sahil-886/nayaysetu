@@ -31,6 +31,7 @@ export default function PublicKnowYourRightsPage() {
     isExplainingPublicDoc,
     publicExplainError,
     fetchPublicDocExplanation,
+    language,
   } = useCaseContext();
 
   const [activeTab, setActiveTab] = useState<'rights_chat' | 'doc_explainer'>('rights_chat');
@@ -40,7 +41,7 @@ export default function PublicKnowYourRightsPage() {
     if (activeTab === 'doc_explainer' && documentInfo && !publicExplanation && !isExplainingPublicDoc && !publicExplainError) {
       fetchPublicDocExplanation();
     }
-  }, [activeTab, documentInfo, publicExplanation, isExplainingPublicDoc, publicExplainError, fetchPublicDocExplanation]);
+  }, [activeTab, documentInfo, publicExplanation, isExplainingPublicDoc, publicExplainError, fetchPublicDocExplanation, language]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
