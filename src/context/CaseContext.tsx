@@ -23,6 +23,14 @@ export interface OllamaStatus {
   error?: string;
 }
 
+export interface PublicExplanation {
+  document_type: string;
+  key_content: string;
+  meaning: string;
+  next_steps: string;
+  deadlines: string;
+}
+
 interface CaseContextType {
   sessionId: string;
   documentInfo: DocumentInfo | null;
@@ -35,6 +43,9 @@ interface CaseContextType {
   messages: ChatMessage[];
   precedents: PrecedentItem[];
   publicMessages: PublicChatMessage[];
+  publicExplanation: PublicExplanation | null;
+  isExplainingPublicDoc: boolean;
+  publicExplainError: string | null;
   ollamaStatus: OllamaStatus | null;
   isIngesting: boolean;
   isSummarizing: boolean;
@@ -50,6 +61,7 @@ interface CaseContextType {
   handleFileUpload: (file: File) => Promise<void>;
   handleGenerateSummary: () => void;
   fetchGraph: () => Promise<void>;
+  fetchPublicDocExplanation: () => Promise<void>;
   handleSendMessage: (questionText: string) => Promise<void>;
   handleSendPublicMessage: (questionText: string) => Promise<void>;
   handleSearchPrecedents: () => Promise<void>;
@@ -69,6 +81,10 @@ export const CaseProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [graphData, setGraphData] = useState<GraphData | null>(null);
   const [isGeneratingGraph, setIsGeneratingGraph] = useState(false);
   const [graphError, setGraphError] = useState<string | null>(null);
+
+  const [publicExplanation, setPublicExplanation] = useState<PublicExplanation | null>(null);
+  const [isExplainingPublicDoc, setIsExplainingPublicDoc] = useState(false);
+  const [publicExplainError, setPublicExplainError] = useState<string | null>(null);
 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [precedents, setPrecedents] = useState<PrecedentItem[]>([]);
@@ -183,6 +199,35 @@ export const CaseProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   }, [documentInfo, sessionId]);
 
+  const fetchPublicDocExplanation = useCallback(async () => {
+    if (!documentInfo || !sessionId) return;
+    setIsExplainingPublicDoc(true);
+    setPublicExplainError(null);
+
+    try {
+      const res = await fetch('/api/public-explain', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sessionId,
+          documentId: documentInfo.documentId,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data || !data.success) {
+        throw new Error(data?.error || 'Failed to explain document in plain language.');
+      }
+
+      setPublicExplanation(data.explanation);
+    } catch (err: any) {
+      console.error('[Public Explain Error]:', err);
+      setPublicExplainError(err.message || 'Failed to explain document.');
+    } finally {
+      setIsExplainingPublicDoc(false);
+    }
+  }, [documentInfo, sessionId]);
+
   const handleFileUpload = async (file: File) => {
     setIsIngesting(true);
     setError(null);
@@ -191,6 +236,8 @@ export const CaseProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setSummaryError(null);
     setGraphData(null);
     setGraphError(null);
+    setPublicExplanation(null);
+    setPublicExplainError(null);
     setPrecedents([]);
     setMessages([]);
 
@@ -397,6 +444,9 @@ export const CaseProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         messages,
         precedents,
         publicMessages,
+        publicExplanation,
+        isExplainingPublicDoc,
+        publicExplainError,
         ollamaStatus,
         isIngesting,
         isSummarizing,
@@ -412,6 +462,7 @@ export const CaseProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         handleFileUpload,
         handleGenerateSummary,
         fetchGraph,
+        fetchPublicDocExplanation,
         handleSendMessage,
         handleSendPublicMessage,
         handleSearchPrecedents,
