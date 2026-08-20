@@ -8,18 +8,52 @@ function parseLlmJson(rawOutput: string): any {
 
   let clean = rawOutput.replace(/```json\s*/gi, '').replace(/```\s*/gi, '').trim();
   const match = clean.match(/\{[\s\S]*\}/);
-  if (!match) return null;
+  let jsonStr = match ? match[0] : clean;
 
-  let jsonStr = match[0];
+  // Tier 1: Direct JSON.parse
   try {
     return JSON.parse(jsonStr);
-  } catch (e) {
+  } catch (e1) {
+    // Tier 2: Cleanup unescaped control characters and trailing commas
     try {
-      jsonStr = jsonStr.replace(/,\s*([\}\]])/g, '$1');
-      return JSON.parse(jsonStr);
+      let sanitized = jsonStr
+        .replace(/,\s*([\}\]])/g, '$1')
+        .replace(/[\u0000-\u001F\u007F-\u009F]/g, (c) => (c === '\n' || c === '\r' || c === '\t' ? c : ''));
+      return JSON.parse(sanitized);
     } catch (e2) {
-      console.error('[Public Explain API]: Failed to parse JSON:', rawOutput.slice(0, 300));
-      return null;
+      // Tier 3: Key-Value Regex Extraction Fallback
+      console.warn('[Public Explain API]: JSON.parse failed, attempting Regex extraction fallback...');
+      const extractField = (key: string): string => {
+        const regex = new RegExp(`"${key}"\\s*:\\s*"([\\s\\S]*?)"(?=\\s*,\\s*"|\\s*\\})`, 'i');
+        const m = jsonStr.match(regex);
+        if (m && m[1]) return m[1].replace(/\\n/g, '\n').replace(/\\"/g, '"').trim();
+        return '';
+      };
+
+      const docType = extractField('document_type');
+      const keyContent = extractField('key_content');
+      const meaning = extractField('meaning');
+      const nextSteps = extractField('next_steps');
+      const deadlines = extractField('deadlines');
+
+      if (docType || keyContent || meaning || nextSteps || deadlines) {
+        return {
+          document_type: docType || 'Legal Document Notice',
+          key_content: keyContent || rawOutput.slice(0, 500),
+          meaning: meaning || 'Review the document details with a legal aid provider.',
+          next_steps: nextSteps || 'Consult a qualified lawyer or Legal Aid helpline 15100.',
+          deadlines: deadlines || 'No explicit deadline stated in text.',
+        };
+      }
+
+      // Tier 4: Raw text split fallback
+      return {
+        document_type: 'Legal Document Notice',
+        key_content: rawOutput.slice(0, 600),
+        meaning: 'Document summary generated.',
+        next_steps: 'Consult a qualified lawyer or NALSA Helpline (15100).',
+        deadlines: 'Check document for any specific dates.',
+      };
     }
   }
 }
