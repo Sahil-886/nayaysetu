@@ -26,8 +26,9 @@ export function getLanguageInstruction(lang?: string): string {
       return `\n\nIMPORTANT LANGUAGE INSTRUCTION (MANDATORY): Write your entire response in Marathi (मराठी) using Devanagari script. Do not use English except for legal citations, statute names, section numbers, and case names. Respond ONLY in Marathi.`;
     case 'ta':
       return `\n\nIMPORTANT LANGUAGE INSTRUCTION (MANDATORY): Write your entire response in Tamil (தமிழ்) using Tamil script. Do not use English except for legal citations, statute names, section numbers, and case names. Respond ONLY in Tamil.`;
+    case 'en':
     default:
-      return '';
+      return `\n\nIMPORTANT LANGUAGE INSTRUCTION (MANDATORY): Write your entire response in clear, plain ENGLISH. Do NOT use Hindi, Devanagari script, or any other language.`;
   }
 }
 

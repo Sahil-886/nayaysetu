@@ -82,13 +82,21 @@ export async function POST(req: NextRequest) {
       ? 'ஆவணத்தில் குறிப்பிடப்படவில்லை'
       : 'Not stated in document.';
 
+    const exampleDocType = language === 'hi'
+      ? '"संपत्ति विवाद से संबंधित कोर्ट नोटिस", "जमानत आदेश"'
+      : language === 'mr'
+      ? '"मालमत्ता वादाशी संबंधित कोर्ट नोटीस", "जामीन आदेश"'
+      : language === 'ta'
+      ? '"சொத்து தகராறு தொடர்பான நீதிமன்ற அறிவிப்பு", "ஜாமீன் உத்தரவு"'
+      : '"Court Notice regarding property dispute", "Bail Order", "Eviction Notice"';
+
     const systemPrompt = `${langInstruction}
 
 You are "NyaySetu Plain-Language Legal Explainer", an AI assistant helping Indian citizens understand legal notices, court orders, and judgments.
 Analyze the provided document text and return a SINGLE raw JSON object with 5 keys.
 
 JSON KEYS & VALUE REQUIREMENTS:
-1. "document_type": What kind of document is this? Explain in simple everyday terms (e.g., in Hindi: "संपत्ति विवाद से संबंधित कोर्ट नोटिस", "जमानत आदेश").
+1. "document_type": What kind of document is this? Explain in simple everyday terms (e.g. ${exampleDocType}).
 2. "key_content": Plain-language summary of what happened and what the document actually says. Avoid legal jargon.
 3. "meaning": What does this document mean for the person in practical, everyday terms?
 4. "next_steps": General procedural steps a citizen can take (e.g. gather records, reply within deadline, consult legal aid). NOT formal legal advice.
@@ -96,7 +104,7 @@ JSON KEYS & VALUE REQUIREMENTS:
 
 RULES:
 - Base ALL explanations STRICTLY on the provided text ONLY.
-- Write ALL 5 JSON string values completely in the requested output language (${language === 'hi' ? 'Hindi / हिंदी' : language === 'mr' ? 'Marathi / मराठी' : language === 'ta' ? 'Tamil / தமிழ்' : 'English'}).
+- Write ALL 5 JSON string values completely in the requested output language (${language === 'hi' ? 'Hindi / हिंदी' : language === 'mr' ? 'Marathi / मराठी' : language === 'ta' ? 'Tamil / தமிழ்' : 'ENGLISH'}).
 - Keep legal citations, section numbers, act titles, and case names recognizable.
 - If information is not in the text, return "${unstatedFallback}" for that field.
 - Return ONLY raw JSON. Do not include markdown code fences or conversational filler.${langInstruction}`;
